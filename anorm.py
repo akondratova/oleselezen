@@ -30,37 +30,50 @@ def terminate():
     sys.exit()
 
 
-def flower_move(self):
-    self.rect = self.f.get_rect()
-    self.dx = 1
-    if pygame.sprite.spritecollideany(flower_group, walls_group):
-        self.dx = -self.dx
-    self.rect = self.rect.move(self.dx, 0)
+class start_screen():
+    def __init__(self):
+        intro_text = ["начало игры"]
+        fon = pygame.transform.scale(load_image('sun.png'), (width, height))
+        screen.blit(fon, (0, 0))
+        font = pygame.font.Font(None, 30)
+        text_coord = 50
+        for line in intro_text:
+            string_rendered = font.render(line, 1, pygame.Color('white'))
+            intro_rect = string_rendered.get_rect()
+            text_coord += 10
+            intro_rect.top = text_coord
+            intro_rect.x = 10
+            text_coord += intro_rect.height
+            screen.blit(string_rendered, intro_rect)
+        while True:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    terminate()
+                elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                    return  # начинаем игру
+            pygame.display.flip()
+            clock.tick(FPS)
 
+    def button(self):
+        mouse = pygame.mouse.get_pos()
+        click = pygame.mouse.get_pressed()
+        running = False
+        if (400 + 40 > mouse[0] > 400) and (500 + 25 > mouse[1] > 500):
+            pygame.draw.rect(screen, (0, 0, 240), (400, 500, 40, 25))
+            if (click[0] == 1 and action != None):
+                if (action == "Start"):
+                    running = True
+                elif (action == "Exit"):
+                    pygame.quit()
 
-def start_screen():
-    intro_text = ["начало игры"]
-    fon = pygame.transform.scale(load_image('sun.png'), (width, height))
-    screen.blit(fon, (0, 0))
-    font = pygame.font.Font(None, 30)
-    text_coord = 50
-    for line in intro_text:
-        string_rendered = font.render(line, 1, pygame.Color('white'))
-        intro_rect = string_rendered.get_rect()
-        text_coord += 10
-        intro_rect.top = text_coord
-        intro_rect.x = 10
-        text_coord += intro_rect.height
-        screen.blit(string_rendered, intro_rect)
+        else:
+            pygame.draw.rect(screen, (0, 0, 255), (400, 500, 40, 25))
+            smallText = pygame.font.Font("freesansbold.ttf", 20)
+            textSurf, textRect = text_objects(, smallText)
+            textRect.center = ((400 + (40 / 2)), (500 + (25 / 2)))
+            screen.blit(textSurf, textRect)
 
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                terminate()
-            elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
-                return  # начинаем игру
-        pygame.display.flip()
-        clock.tick(FPS)
+        return running
 
 
 def final_screen():
@@ -134,6 +147,22 @@ lava_group = pygame.sprite.Group()
 portal_group = pygame.sprite.Group()
 
 
+class Flower(pygame.sprite.Sprite):
+    image = f
+
+    def __init__(self):
+        super().__init__(flower_group)
+        self.rect = self.image.get_rect()
+        self.dx = 1
+
+    def update(self, *args):
+        self.rect = self.image.get_rect()
+        self.dx = 1
+        if pygame.sprite.spritecollideany(flower_group, walls_group):
+            self.dx = -self.dx
+        self.rect = self.rect.move(self.dx, 0)
+
+
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
@@ -205,10 +234,10 @@ def generate_level(level):
 
 player, level_x, level_y = generate_level(load_level(random.choice(EASY)))
 u = 'easy'
-start_screen()
-running = True
+running = start_screen.button()
 
 while running:
+    Flower()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -233,6 +262,7 @@ while running:
                 player.update_right()
                 if pygame.sprite.spritecollideany(player, walls_group):
                     player.move(0, 1)
+
         elif pygame.sprite.spritecollideany(player, portal_group) and u == 'easy':
             size = width, height = 700, 700
             screen = pygame.display.set_mode(size)
